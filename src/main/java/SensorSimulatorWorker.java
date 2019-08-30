@@ -13,7 +13,7 @@ public class SensorSimulatorWorker extends Thread {
     ObjectOutputStream dataOutputStream;
     boolean continueRunning = true;
     int id;
-    int standartDeviationMultiplier = 10;
+    double standartDeviationMultiplier = 1;
 
     public SensorSimulatorWorker(int id){
         this.id = id;
@@ -25,13 +25,13 @@ public class SensorSimulatorWorker extends Thread {
             socket = new Socket("localhost",7000);
             dataOutputStream = new ObjectOutputStream(socket.getOutputStream());
             while(continueRunning){
-                Thread.sleep(250);
+                Thread.sleep(150);
 
                 //System.out.println("Worker"+this.id+" sent data.");
 
                 //dataOutputStream.flush();
 
-                System.out.println("dai muu");
+                //System.out.println("dai muu");
                 dataOutputStream.writeObject(this.generateDataPointPair());
             }
 
@@ -45,7 +45,9 @@ public class SensorSimulatorWorker extends Thread {
 
     public Pair<Date,Double> generateDataPointPair(){
         Random rand = new Random();
-        Double value = rand.nextGaussian()*standartDeviationMultiplier++;
+        Double value = rand.nextGaussian()*standartDeviationMultiplier;
+        standartDeviationMultiplier += 0.01;
+        System.out.println(standartDeviationMultiplier);
         Pair<Date,Double> newDataPoint = new Pair<Date,Double>(new Date(),value);
         return newDataPoint;
     }

@@ -9,11 +9,13 @@ import java.util.Date;
 public class DeciderServer {
 
     ServerSocket serverSocket;
-    MonitorThread monitorThread;
+    MonitoringService monitoringService;
     DataCollector dataCollector;
     ArrayList<ServerConnection> connections;
     boolean continueRunning = true;
-
+    final int calculateVarianceWindowSize = 10;
+    final int monitoringIntervalInMilli = 10000;
+    final int movingAverageWindowSize = 5;
 
 
     public static void main(String[] args){
@@ -23,11 +25,11 @@ public class DeciderServer {
     public DeciderServer(){
         try {
             connections = new ArrayList<ServerConnection>();
-            dataCollector = new DataCollector();
+            dataCollector = new DataCollector(calculateVarianceWindowSize);
 
             // start monitoring
-            monitorThread = new MonitorThread(dataCollector);
-            monitorThread.start();
+            monitoringService = new MonitoringService(dataCollector,monitoringIntervalInMilli,movingAverageWindowSize);
+            monitoringService.startMonitoring();
 
             // await socket connection
             serverSocket = new ServerSocket(7000);

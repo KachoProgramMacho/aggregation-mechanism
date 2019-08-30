@@ -6,19 +6,28 @@ import org.knowm.xchart.XYChart;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 public class DataCollector {
     ArrayList<Pair<Date,Double>> collectedData;
+    ArrayList<Double> varianceData;
+    int calculateVarianceWindowSize;
 
-    public DataCollector(){
+    public DataCollector(int calculateVarianceWindowSize){
         this.collectedData = new ArrayList<Pair<Date,Double>>();
+        this.varianceData = new ArrayList<Double>();
+        this.calculateVarianceWindowSize = calculateVarianceWindowSize;
     }
 
-    public double calculateVariance(){
+/*    public double calculateVariance(){
         //calculate mean
         double mean = 0;
-        for(Pair<Date,Double> dataPoint : collectedData){
-            mean += dataPoint.getValue();
+
+        //iterator avoid concurrency problems
+        Iterator<Pair<Date,Double>> iter = collectedData.iterator();
+        while (iter.hasNext()) {
+            mean += iter.next().getValue();
         }
         mean /= collectedData.size();
 
@@ -30,6 +39,39 @@ public class DataCollector {
         variance /= collectedData.size();
 
         return variance;
+    }*/
+
+    public double forecastNextVarianceMovingAverage(int n){
+        if(varianceData.size()<n)
+            return 0;
+        List<Double> subList = varianceData.subList(varianceData.size()-n,varianceData.size());
+        Iterator<Double> iter = subList.iterator();
+        double averageVarianceOfWindow = 0;
+        while(iter.hasNext()){
+            averageVarianceOfWindow += iter.next();
+        }
+        averageVarianceOfWindow /= n;
+        return averageVarianceOfWindow;
+    }
+
+    public void gatherVarianceDataFromLastEntries(int n){
+        List<Pair<Date,Double>> subList = collectedData.subList(collectedData.size()-n,collectedData.size());
+        Iterator<Pair<Date,Double>> iter = subList.iterator();
+        double mean = 0;
+        while (iter.hasNext()) {
+            mean += iter.next().getValue();
+        }
+        mean /= subList.size();
+
+        //calculate variance
+        double variance = 0;
+        iter = subList.iterator();
+        while (iter.hasNext()) {
+            double nextValue = iter.next().getValue();
+            variance += (nextValue - mean) * (nextValue - mean);
+        }
+        variance /= subList.size();
+        this.varianceData.add(variance);
     }
 
     public void createChart(){
@@ -41,9 +83,22 @@ public class DataCollector {
         }
 
         // Create Chart
-        XYChart chart = QuickChart.getChart("Variance: "+ this.calculateVariance(), "X", "Y", "y(x)", xData, yData);
+        double[] varxData = new double[varianceData.size()];
+        double[] varyData = new double[varianceData.size()];
+        for(int i =0;i<varianceData.size();i++){
+            varxData[i] = i;
+            varyData[i] = varianceData.get(i);
+        }
+
+
+        XYChart chart = QuickChart.getChart("values", "X", "Y", "y(x)", xData, yData);
+        XYChart chartVar = QuickChart.getChart("Variance", "X", "Y", "y(x)", varxData, varyData);
+
         // Show it
-        new SwingWrapper(chart).displayChart().setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        JFrame jFrame1 = new SwingWrapper(chart).displayChart();
+        JFrame jFrame2 = new SwingWrapper(chartVar).displayChart();
+        jFrame1.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        jFrame2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 
 
@@ -57,5 +112,8 @@ public class DataCollector {
 
     public void addNewDataPoint(Pair<Date,Double> dataPoint){
         collectedData.add(dataPoint);
+        if(collectedData.size() % this.calculateVarianceWindowSize ==0 && collectedData.size()>=calculateVarianceWindowSize){
+            this.gatherVarianceDataFromLastEntries(calculateVarianceWindowSize);
+        }
     }
 }

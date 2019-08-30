@@ -25,7 +25,7 @@ public class ServerConnection extends Thread{
             dataInputStream = new ObjectInputStream(socket.getInputStream());
             while(continueRunning){
                 Pair<Date,Double> newDataPoint = (Pair<Date,Double>)dataInputStream.readObject();
-                System.out.println("New data point: "+ newDataPoint);
+                //System.out.println("New data point: "+ newDataPoint);
                 dataCollector.addNewDataPoint(newDataPoint);
 
             }
