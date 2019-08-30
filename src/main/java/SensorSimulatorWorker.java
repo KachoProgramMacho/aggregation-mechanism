@@ -14,9 +14,13 @@ public class SensorSimulatorWorker extends Thread {
     boolean continueRunning = true;
     int id;
     double standartDeviationMultiplier = 1;
+    double multiplierIncrease;
+    int dataGenerationInterval;
 
-    public SensorSimulatorWorker(int id){
+    public SensorSimulatorWorker(int id, double multiplierIncrease, int dataGenerationInterval){
         this.id = id;
+        this.multiplierIncrease = multiplierIncrease;
+        this.dataGenerationInterval = dataGenerationInterval;
         System.out.println("Worker "+id+" spawned!");
     }
 
@@ -25,7 +29,7 @@ public class SensorSimulatorWorker extends Thread {
             socket = new Socket("localhost",7000);
             dataOutputStream = new ObjectOutputStream(socket.getOutputStream());
             while(continueRunning){
-                Thread.sleep(150);
+                Thread.sleep(dataGenerationInterval);
 
                 //System.out.println("Worker"+this.id+" sent data.");
 
@@ -46,8 +50,8 @@ public class SensorSimulatorWorker extends Thread {
     public Pair<Date,Double> generateDataPointPair(){
         Random rand = new Random();
         Double value = rand.nextGaussian()*standartDeviationMultiplier;
-        standartDeviationMultiplier += 0.01;
-        System.out.println(standartDeviationMultiplier);
+        standartDeviationMultiplier += multiplierIncrease;
+        //System.out.println(standartDeviationMultiplier);
         Pair<Date,Double> newDataPoint = new Pair<Date,Double>(new Date(),value);
         return newDataPoint;
     }
