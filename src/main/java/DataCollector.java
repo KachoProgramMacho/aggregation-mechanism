@@ -72,9 +72,10 @@ public class DataCollector {
         }
         variance /= subList.size();
         this.varianceData.add(variance);
+        //System.out.println("new variance " + variance);
     }
 
-    public void createChart(){
+    public void createChart(boolean varianceThresholdReached){
         double[] xData = new double[collectedData.size()];
         double[] yData = new double[collectedData.size()];
         for(int i =0;i<collectedData.size();i++){
@@ -90,20 +91,21 @@ public class DataCollector {
             varyData[i] = varianceData.get(i);
         }
 
-
-        XYChart chart = QuickChart.getChart("values", "X", "Y", "y(x)", xData, yData);
-        XYChart chartVar = QuickChart.getChart("Variance", "X", "Y", "y(x)", varxData, varyData);
-
-        // Show it
-        JFrame jFrame1 = new SwingWrapper(chart).displayChart();
-        JFrame jFrame2 = new SwingWrapper(chartVar).displayChart();
-        jFrame1.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        jFrame2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        if(varianceThresholdReached){
+            XYChart chartVar = QuickChart.getChart("Variance", "X", "Y", "y(x)", varxData, varyData);
+            JFrame jFrame2 = new SwingWrapper(chartVar).displayChart();
+            jFrame2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        }else{
+            XYChart chart = QuickChart.getChart("values", "X", "Y", "y(x)", xData, yData);
+            JFrame jFrame1 = new SwingWrapper(chart).displayChart();
+            jFrame1.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        }
     }
 
 
     public void deleteCollectedData() {
-        this.collectedData = new ArrayList<Pair<Date,Double>>();
+        this.collectedData.clear();
+        this.varianceData.clear();
     }
 
     public ArrayList<Pair<Date, Double>> getCollectedData() {

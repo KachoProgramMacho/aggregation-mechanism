@@ -11,6 +11,10 @@ public class MonitoringService{
     int movingAverageWindowSize;
     //int gatherVarianceDataPeriodinMilliseconds = 600;
 
+    final int reportTimeWindow = 1 * 60 * 1000;
+    boolean varianceThresholdReached = false;
+    double varianceThreshold = 1000.0;
+
     //console colors
     public static final String GREEN = "\033[0;32m";
     public static final String RESET = "\033[0m";
@@ -29,11 +33,22 @@ public class MonitoringService{
             @Override
             public void run(){
                 double forecastValue = dataCollector.forecastNextVarianceMovingAverage(movingAverageWindowSize);
+                if(forecastValue > varianceThreshold){
+                    varianceThresholdReached = true;
+                }
                 System.out.println("Forecast Variance Value: " + forecastValue);
-                dataCollector.createChart();
+
             }
         },monitoringIntervalInMilli,monitoringIntervalInMilli);
 
+        new Timer().scheduleAtFixedRate(new TimerTask(){
+            @Override
+            public void run(){
+                dataCollector.createChart(varianceThresholdReached);
+                varianceThresholdReached = false;
+                dataCollector.deleteCollectedData();
+            }
+        },reportTimeWindow,reportTimeWindow);
 
 
 /*        new Timer().scheduleAtFixedRate(new TimerTask(){

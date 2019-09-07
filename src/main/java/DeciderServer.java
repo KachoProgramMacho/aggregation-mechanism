@@ -12,6 +12,9 @@ public class DeciderServer {
     MonitoringService monitoringService;
     DataCollector dataCollector;
     ArrayList<ServerConnection> connections;
+
+
+
     boolean continueRunning = true;
     final int calculateVarianceWindowSize = 10;
     final int monitoringIntervalInMilli = 10000;
