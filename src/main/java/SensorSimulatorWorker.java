@@ -18,6 +18,7 @@ public class SensorSimulatorWorker extends Thread {
     double standartDeviationMultiplier = 1;
     double multiplierIncrease;
     int dataGenerationInterval;
+    int dataGenerationDelay = 100;
 
     public SensorSimulatorWorker(int id, double multiplierIncrease, int dataGenerationInterval){
         this.id = id;
@@ -28,9 +29,11 @@ public class SensorSimulatorWorker extends Thread {
             @Override
             public void run(){
                 if(standartDeviationMultiplier ==1){
-                    standartDeviationMultiplier = 200;
+                    standartDeviationMultiplier = 100;
+                    dataGenerationDelay = 2;
                 }else{
                     standartDeviationMultiplier = 1;
+                    dataGenerationDelay = 200;
                 }
 
             }
@@ -43,7 +46,7 @@ public class SensorSimulatorWorker extends Thread {
             dataOutputStream = new ObjectOutputStream(socket.getOutputStream());
             while(continueRunning){
                 Thread.sleep(dataGenerationInterval);
-                dataGenerationInterval = new Random().nextInt(3)+2;
+                dataGenerationInterval = new Random().nextInt(3)+dataGenerationDelay;
                 if(new Random().nextInt(3000)==45){
                     Thread.sleep(2000);
                 }

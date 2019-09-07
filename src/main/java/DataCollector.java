@@ -14,6 +14,7 @@ public class DataCollector {
     int calculateVarianceWindowSize;
     //in milliseconds
     int histogramBucketSize = 5000;
+    int frequencyThreshold= 100;
 
     public DataCollector(int calculateVarianceWindowSize){
         this.collectedData = new ArrayList<Pair<Date,Double>>();
@@ -85,58 +86,60 @@ public class DataCollector {
         double frequency= 1000/averageDataDelay;
 
         System.out.println("FREQUENCY : "+frequency + " datapoints per second");
+        System.out.println(collectedData.size());
 
-
-        double[] xData = new double[collectedDataSize];
-        double[] yData = new double[collectedDataSize];
-        for(int i =0;i<collectedDataSize;i++){
-            xData[i] = i;
-            yData[i] = collectedData.get(i).getValue();
-        }
-
-        XYChart chart = QuickChart.getChart("values", "X", "Y", "y(x)", xData, yData);
-        JFrame jFrame1 = new SwingWrapper(chart).displayChart();
-        jFrame1.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-
-        //Histogram
-        Date[] keyData = new Date[collectedDataSize];
-        double[] valueData = new double[collectedDataSize];
-        for(int i =0;i<collectedDataSize;i++){
-            keyData[i] = collectedData.get(i).getKey();
-            valueData[i] = collectedData.get(i).getValue();
-        }
-        ArrayList<Date> buckets = new ArrayList<Date>();
-        ArrayList<Integer> numberOfDatapoints = new ArrayList<Integer>();
-        ArrayList<Integer> bucketsNumbered = new ArrayList<Integer>();
-
-        buckets.add(keyData[0]);
-        bucketsNumbered.add(0);
-        numberOfDatapoints.add(0);
-        long currentBucketBoundary = keyData[0].getTime() + histogramBucketSize;
-        for(int i =0;i<keyData.length;i++){
-            if(keyData[i].getTime()>=currentBucketBoundary){
-                currentBucketBoundary+=histogramBucketSize;
-                buckets.add(keyData[i]);
-                bucketsNumbered.add(bucketsNumbered.size());
-                numberOfDatapoints.add(0);
+        if(frequency < frequencyThreshold) {
+            double[] xData = new double[collectedDataSize];
+            double[] yData = new double[collectedDataSize];
+            for (int i = 0; i < collectedDataSize; i++) {
+                xData[i] = i;
+                yData[i] = collectedData.get(i).getValue();
             }
-            numberOfDatapoints.set(numberOfDatapoints.size()-1,numberOfDatapoints.get(numberOfDatapoints.size()-1)+1);
 
-        }
+            XYChart chart = QuickChart.getChart("values", "X", "Y", "y(x)", xData, yData);
+            JFrame jFrame1 = new SwingWrapper(chart).displayChart();
+            jFrame1.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        }else {
 
-        CategoryChart histogramChart = new CategoryChartBuilder().width(800).height(600).title("Score Histogram").xAxisTitle("Score").yAxisTitle("Number").build();
-        histogramChart.getStyler().setDatePattern("HH:mm:ss");
-        // Customize Chart
+            //Histogram
+            Date[] keyData = new Date[collectedDataSize];
+            double[] valueData = new double[collectedDataSize];
+            for (int i = 0; i < collectedDataSize; i++) {
+                keyData[i] = collectedData.get(i).getKey();
+                valueData[i] = collectedData.get(i).getValue();
+            }
+            ArrayList<Date> buckets = new ArrayList<Date>();
+            ArrayList<Integer> numberOfDatapoints = new ArrayList<Integer>();
+            ArrayList<Integer> bucketsNumbered = new ArrayList<Integer>();
+
+            buckets.add(keyData[0]);
+            bucketsNumbered.add(0);
+            numberOfDatapoints.add(0);
+            long currentBucketBoundary = keyData[0].getTime() + histogramBucketSize;
+            for (int i = 0; i < keyData.length; i++) {
+                if (keyData[i].getTime() >= currentBucketBoundary) {
+                    currentBucketBoundary += histogramBucketSize;
+                    buckets.add(keyData[i]);
+                    bucketsNumbered.add(bucketsNumbered.size());
+                    numberOfDatapoints.add(0);
+                }
+                numberOfDatapoints.set(numberOfDatapoints.size() - 1, numberOfDatapoints.get(numberOfDatapoints.size() - 1) + 1);
+
+            }
+
+            CategoryChart histogramChart = new CategoryChartBuilder().width(800).height(600).title("Score Histogram").xAxisTitle("Score").yAxisTitle("Number").build();
+            histogramChart.getStyler().setDatePattern("HH:mm:ss");
+            // Customize Chart
 /*
         chart.getStyler().setLegendPosition(LegendPosition.InsideNW);
         chart.getStyler().setHasAnnotations(true);
 */
 
-        // Series
-        histogramChart.addSeries("test 1", buckets, numberOfDatapoints);
-        JFrame jFrame2 = new SwingWrapper(histogramChart).displayChart();
-        jFrame2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            // Series
+            histogramChart.addSeries("test 1", buckets, numberOfDatapoints);
+            JFrame jFrame2 = new SwingWrapper(histogramChart).displayChart();
+            jFrame2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        }
     }
 
 
@@ -149,7 +152,7 @@ public class DataCollector {
         return collectedData;
     }
 
-    public void addNewDataPoint(Pair<Date,Double> dataPoint){
+    public synchronized void addNewDataPoint(Pair<Date,Double> dataPoint){
         collectedData.add(dataPoint);
         if(collectedData.size() % this.calculateVarianceWindowSize ==0 && collectedData.size()>=calculateVarianceWindowSize){
             this.gatherVarianceDataFromLastEntries(calculateVarianceWindowSize);

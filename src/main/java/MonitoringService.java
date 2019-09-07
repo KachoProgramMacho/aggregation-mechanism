@@ -40,6 +40,8 @@ public class MonitoringService{
                 }
                 System.out.println("Forecast Variance Value: " + forecastValue);
 
+                System.out.println("Mem Usage: " + ( new Double( Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / Runtime.getRuntime().totalMemory() * 100));
+
             }
         },monitoringIntervalInMilli,monitoringIntervalInMilli);
 
