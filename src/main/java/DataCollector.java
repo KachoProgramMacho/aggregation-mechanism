@@ -1,9 +1,8 @@
 import javafx.util.Pair;
-import org.knowm.xchart.QuickChart;
-import org.knowm.xchart.SwingWrapper;
-import org.knowm.xchart.XYChart;
+import org.knowm.xchart.*;
 
 import javax.swing.*;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -13,6 +12,8 @@ public class DataCollector {
     ArrayList<Pair<Date,Double>> collectedData;
     ArrayList<Double> varianceData;
     int calculateVarianceWindowSize;
+    //in milliseconds
+    int histogramBucketSize = 5000;
 
     public DataCollector(int calculateVarianceWindowSize){
         this.collectedData = new ArrayList<Pair<Date,Double>>();
@@ -75,37 +76,73 @@ public class DataCollector {
         //System.out.println("new variance " + variance);
     }
 
-    public void createChart(boolean varianceThresholdReached){
-        double[] xData = new double[collectedData.size()];
-        double[] yData = new double[collectedData.size()];
-        for(int i =0;i<collectedData.size();i++){
+    public void createChart(){
+        int collectedDataSize = collectedData.size();
+
+
+        long timeWindowOfData = collectedData.get(collectedDataSize-1).getKey().getTime() - collectedData.get(0).getKey().getTime();
+        double averageDataDelay = timeWindowOfData / collectedDataSize;
+        double frequency= 1000/averageDataDelay;
+
+        System.out.println("FREQUENCY : "+frequency + " datapoints per second");
+
+
+        double[] xData = new double[collectedDataSize];
+        double[] yData = new double[collectedDataSize];
+        for(int i =0;i<collectedDataSize;i++){
             xData[i] = i;
             yData[i] = collectedData.get(i).getValue();
         }
 
-        // Create Chart
-        double[] varxData = new double[varianceData.size()];
-        double[] varyData = new double[varianceData.size()];
-        for(int i =0;i<varianceData.size();i++){
-            varxData[i] = i;
-            varyData[i] = varianceData.get(i);
+        XYChart chart = QuickChart.getChart("values", "X", "Y", "y(x)", xData, yData);
+        JFrame jFrame1 = new SwingWrapper(chart).displayChart();
+        jFrame1.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+
+        //Histogram
+        Date[] keyData = new Date[collectedDataSize];
+        double[] valueData = new double[collectedDataSize];
+        for(int i =0;i<collectedDataSize;i++){
+            keyData[i] = collectedData.get(i).getKey();
+            valueData[i] = collectedData.get(i).getValue();
+        }
+        ArrayList<Date> buckets = new ArrayList<Date>();
+        ArrayList<Integer> numberOfDatapoints = new ArrayList<Integer>();
+        ArrayList<Integer> bucketsNumbered = new ArrayList<Integer>();
+
+        buckets.add(keyData[0]);
+        bucketsNumbered.add(0);
+        numberOfDatapoints.add(0);
+        long currentBucketBoundary = keyData[0].getTime() + histogramBucketSize;
+        for(int i =0;i<keyData.length;i++){
+            if(keyData[i].getTime()>=currentBucketBoundary){
+                currentBucketBoundary+=histogramBucketSize;
+                buckets.add(keyData[i]);
+                bucketsNumbered.add(bucketsNumbered.size());
+                numberOfDatapoints.add(0);
+            }
+            numberOfDatapoints.set(numberOfDatapoints.size()-1,numberOfDatapoints.get(numberOfDatapoints.size()-1)+1);
+
         }
 
-        if(varianceThresholdReached){
-            XYChart chartVar = QuickChart.getChart("Variance", "X", "Y", "y(x)", varxData, varyData);
-            JFrame jFrame2 = new SwingWrapper(chartVar).displayChart();
-            jFrame2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        }else{
-            XYChart chart = QuickChart.getChart("values", "X", "Y", "y(x)", xData, yData);
-            JFrame jFrame1 = new SwingWrapper(chart).displayChart();
-            jFrame1.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        }
+        CategoryChart histogramChart = new CategoryChartBuilder().width(800).height(600).title("Score Histogram").xAxisTitle("Score").yAxisTitle("Number").build();
+        histogramChart.getStyler().setDatePattern("HH:mm:ss");
+        // Customize Chart
+/*
+        chart.getStyler().setLegendPosition(LegendPosition.InsideNW);
+        chart.getStyler().setHasAnnotations(true);
+*/
+
+        // Series
+        histogramChart.addSeries("test 1", buckets, numberOfDatapoints);
+        JFrame jFrame2 = new SwingWrapper(histogramChart).displayChart();
+        jFrame2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 
 
     public void deleteCollectedData() {
         this.collectedData.clear();
-        this.varianceData.clear();
+        this.varianceData = new ArrayList<Double>(this.varianceData.subList(varianceData.size()-calculateVarianceWindowSize,varianceData.size()));
     }
 
     public ArrayList<Pair<Date, Double>> getCollectedData() {

@@ -6,6 +6,8 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Date;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class SensorSimulatorWorker extends Thread {
 
@@ -22,6 +24,17 @@ public class SensorSimulatorWorker extends Thread {
         this.multiplierIncrease = multiplierIncrease;
         this.dataGenerationInterval = dataGenerationInterval;
         System.out.println("Worker "+id+" spawned!");
+        new Timer().scheduleAtFixedRate(new TimerTask(){
+            @Override
+            public void run(){
+                if(standartDeviationMultiplier ==1){
+                    standartDeviationMultiplier = 200;
+                }else{
+                    standartDeviationMultiplier = 1;
+                }
+
+            }
+        },1*30*1000,1*30*1000);
     }
 
     public void run(){
@@ -30,7 +43,10 @@ public class SensorSimulatorWorker extends Thread {
             dataOutputStream = new ObjectOutputStream(socket.getOutputStream());
             while(continueRunning){
                 Thread.sleep(dataGenerationInterval);
-
+                dataGenerationInterval = new Random().nextInt(3)+2;
+                if(new Random().nextInt(3000)==45){
+                    Thread.sleep(2000);
+                }
                 //System.out.println("Worker"+this.id+" sent data.");
 
                 //dataOutputStream.flush();
@@ -50,9 +66,11 @@ public class SensorSimulatorWorker extends Thread {
     public Pair<Date,Double> generateDataPointPair(){
         Random rand = new Random();
         Double value = rand.nextGaussian()*standartDeviationMultiplier;
-        standartDeviationMultiplier += multiplierIncrease;
+        //standartDeviationMultiplier += multiplierIncrease;
         //System.out.println(standartDeviationMultiplier);
         Pair<Date,Double> newDataPoint = new Pair<Date,Double>(new Date(),value);
         return newDataPoint;
     }
+
+
 }
