@@ -92,11 +92,11 @@ public class DataCollector {
             double[] xData = new double[collectedDataSize];
             double[] yData = new double[collectedDataSize];
             for (int i = 0; i < collectedDataSize; i++) {
-                xData[i] = i;
+                xData[i] = collectedData.get(i).getKey().getTime() - collectedData.get(0).getKey().getTime();
                 yData[i] = collectedData.get(i).getValue();
             }
 
-            XYChart chart = QuickChart.getChart("values", "X", "Y", "y(x)", xData, yData);
+            XYChart chart = QuickChart.getChart("Time series chart", "Miliseconds", "value", "Time series chart", xData, yData);
             JFrame jFrame1 = new SwingWrapper(chart).displayChart();
             jFrame1.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         }else {
