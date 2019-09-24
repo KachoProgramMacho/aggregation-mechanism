@@ -1,9 +1,10 @@
 import javafx.util.Pair;
+import sun.plugin2.gluegen.runtime.CPU;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
+import javax.management.*;
+import java.io.FileNotFoundException;
+import java.lang.management.ManagementFactory;
+import java.util.*;
 
 public class MonitoringService{
     DataCollector dataCollector;
@@ -20,6 +21,7 @@ public class MonitoringService{
     public static final String RESET = "\033[0m";
 
 
+
     public MonitoringService(DataCollector dataCollector, int monitoringIntervalInMilli, int movingAverageWindowSize){
         this.dataCollector = dataCollector;
         this.monitoringIntervalInMilli = monitoringIntervalInMilli;
@@ -34,14 +36,13 @@ public class MonitoringService{
             public void run(){
                 double forecastValue = dataCollector.forecastNextVarianceMovingAverage(movingAverageWindowSize);
                 if((forecastValue > varianceThreshold && !overVarianceThreshold)||(forecastValue < varianceThreshold && overVarianceThreshold)){
-                    dataCollector.createChart();
+                    dataCollector.createChart(getMemoryUtilization(),getCPUUtilization());
                     dataCollector.deleteCollectedData();
                     overVarianceThreshold = !overVarianceThreshold;
                 }
                 System.out.println("Forecast Variance Value: " + forecastValue);
-
-                System.out.println("Mem Usage: " + ( new Double( Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / Runtime.getRuntime().totalMemory() * 100));
-
+                System.out.println("Mem: " +getMemoryUtilization());
+                System.out.println("CPU: "+getCPUUtilization());
             }
         },monitoringIntervalInMilli,monitoringIntervalInMilli);
 
@@ -75,4 +76,30 @@ public class MonitoringService{
         }*/
 
     }
+    public int getMemoryUtilization(){
+        return (int)((double)(( Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())) / Runtime.getRuntime().totalMemory() * 100);
+    }
+
+    //TODO: LOOK THROUGH ONCE MORE
+    public int getCPUUtilization(){
+        try {
+
+            MBeanServer mbs    = ManagementFactory.getPlatformMBeanServer();
+            ObjectName name    = ObjectName.getInstance("java.lang:type=OperatingSystem");
+            AttributeList list = mbs.getAttributes(name, new String[]{ "ProcessCpuLoad" });
+
+            if (list.isEmpty())     return 0;
+
+            Attribute att = (Attribute)list.get(0);
+            Double value  = (Double)att.getValue();
+
+            // usually takes a couple of seconds before we get real values
+            if (value == -1.0)      return 0;
+            // returns a percentage value with 1 decimal point precision
+            return (int)((int)(value * 1000) / 10.0);
+        }catch (Exception e){
+            return 0;
+        }
+    }
+
 }

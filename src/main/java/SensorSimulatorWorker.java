@@ -37,12 +37,12 @@ public class SensorSimulatorWorker extends Thread {
                 }
 
             }
-        },1*30*1000,1*30*1000);
+        },1*30*1000,1*30*1000);// TODO: MOVE
     }
 
     public void run(){
         try {
-            socket = new Socket("localhost",7000);
+            socket = new Socket("localhost",7000); //TODO: MOVE
             dataOutputStream = new ObjectOutputStream(socket.getOutputStream());
             while(continueRunning){
                 Thread.sleep(dataGenerationInterval);

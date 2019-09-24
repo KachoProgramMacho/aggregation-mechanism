@@ -2,6 +2,7 @@ import javafx.util.Pair;
 import org.knowm.xchart.*;
 
 import javax.swing.*;
+import java.io.FileNotFoundException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Date;
@@ -16,10 +17,20 @@ public class DataCollector {
     int histogramBucketSize = 5000;
     int frequencyThreshold= 100;
 
+    LogisticRegression logisticRegression;
+
     public DataCollector(int calculateVarianceWindowSize){
         this.collectedData = new ArrayList<Pair<Date,Double>>();
         this.varianceData = new ArrayList<Double>();
         this.calculateVarianceWindowSize = calculateVarianceWindowSize;
+        logisticRegression = new LogisticRegression(3);
+        List<LogisticRegression.Instance> instances = null;
+        try {
+            instances = logisticRegression.readDataSet("src\\main\\resources\\dataset.txt");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        logisticRegression.train(instances);
     }
 
 /*    public double calculateVariance(){
@@ -77,7 +88,7 @@ public class DataCollector {
         //System.out.println("new variance " + variance);
     }
 
-    public void createChart(){
+    public void createChart(int memoryUtilization, int CPUUtilization){
         int collectedDataSize = collectedData.size();
 
 
@@ -87,8 +98,12 @@ public class DataCollector {
 
         System.out.println("FREQUENCY : "+frequency + " datapoints per second");
         System.out.println(collectedData.size());
+        double logisticRegressionOutput = logisticRegression.classify(new int[]{(int)frequency,CPUUtilization,memoryUtilization});
+        System.out.println("Logistic Regression: "+logisticRegressionOutput);
 
-        if(frequency < frequencyThreshold) {
+
+
+        if(logisticRegressionOutput<0.5) {
             double[] xData = new double[collectedDataSize];
             double[] yData = new double[collectedDataSize];
             for (int i = 0; i < collectedDataSize; i++) {
