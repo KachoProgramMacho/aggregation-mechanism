@@ -18,7 +18,7 @@ public class DeciderServer {
     boolean continueRunning = true;
     final int calculateVarianceWindowSize = 10;
     final int monitoringIntervalInMilli = 1000;
-    final int movingAverageWindowSize = 5;
+    final int movingAverageWindowSize = 3;
 
 
     public static void main(String[] args){

@@ -104,14 +104,23 @@ public class DataCollector {
 
 
         if(logisticRegressionOutput<0.5) {
+            double[] xData = new double[varianceData.size()];
+            double[] yData = new double[varianceData.size()];
+            for (int i = 0; i < varianceData.size(); i++) {
+                xData[i] = i;
+                yData[i] = varianceData.get(i);
+            }
+
+/*
             double[] xData = new double[collectedDataSize];
             double[] yData = new double[collectedDataSize];
             for (int i = 0; i < collectedDataSize; i++) {
                 xData[i] = collectedData.get(i).getKey().getTime() - collectedData.get(0).getKey().getTime();
                 yData[i] = collectedData.get(i).getValue();
             }
+*/
 
-            XYChart chart = QuickChart.getChart("Time series chart", "Miliseconds", "value", "Time series chart", xData, yData);
+            XYChart chart = QuickChart.getChart("Variance statistics chart", "Index of variance value", "value", "Variance statistics chart", xData, yData);
             JFrame jFrame1 = new SwingWrapper(chart).displayChart();
             jFrame1.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         }else {

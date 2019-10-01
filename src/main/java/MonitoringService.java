@@ -7,6 +7,8 @@ import java.lang.management.ManagementFactory;
 import java.util.*;
 
 public class MonitoringService{
+
+    //TODO: IZVADI VARIABLITE
     DataCollector dataCollector;
     int monitoringIntervalInMilli;
     int movingAverageWindowSize;
@@ -30,8 +32,21 @@ public class MonitoringService{
 
     public void startMonitoring(){
 
-
         new Timer().scheduleAtFixedRate(new TimerTask(){
+            @Override
+            public void run(){
+                double forecastValue = dataCollector.forecastNextVarianceMovingAverage(movingAverageWindowSize);
+                if(true||(forecastValue > varianceThreshold && !overVarianceThreshold)||(forecastValue < varianceThreshold && overVarianceThreshold)){
+                    dataCollector.createChart(getMemoryUtilization(),getCPUUtilization());
+                    dataCollector.deleteCollectedData();
+                    overVarianceThreshold = !overVarianceThreshold;
+                }
+                System.out.println("Forecast Variance Value: " + forecastValue);
+                System.out.println("Mem: " +getMemoryUtilization());
+                System.out.println("CPU: "+getCPUUtilization());
+            }
+        },1000*60*1,123123);
+/*        new Timer().scheduleAtFixedRate(new TimerTask(){
             @Override
             public void run(){
                 double forecastValue = dataCollector.forecastNextVarianceMovingAverage(movingAverageWindowSize);
@@ -44,36 +59,8 @@ public class MonitoringService{
                 System.out.println("Mem: " +getMemoryUtilization());
                 System.out.println("CPU: "+getCPUUtilization());
             }
-        },monitoringIntervalInMilli,monitoringIntervalInMilli);
+        },monitoringIntervalInMilli,monitoringIntervalInMilli);*/
 
-/*        new Timer().scheduleAtFixedRate(new TimerTask(){
-            @Override
-            public void run(){
-                dataCollector.createChart(varianceThresholdReached);
-                varianceThresholdReached = false;
-                dataCollector.deleteCollectedData();
-            }
-        },reportTimeWindow,reportTimeWindow);*/
-
-
-/*        new Timer().scheduleAtFixedRate(new TimerTask(){
-            @Override
-            public void run(){
-                dataCollector.gatherVarianceData();
-            }
-        },1000,gatherVarianceDataPeriodinMilliseconds);*/
-/*        while(continueMonitoring){
-            try {
-                Thread.sleep(monitorIntervalInMilliseconds);
-
-                System.out.println(GREEN + dataCollector.getCollectedData().toString() + RESET);
-                System.out.println(GREEN + "Variance: "+dataCollector.calculateVariance() + RESET);
-                dataCollector.createChart();
-
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }*/
 
     }
     public int getMemoryUtilization(){

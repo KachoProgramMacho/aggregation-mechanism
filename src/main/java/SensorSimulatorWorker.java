@@ -28,16 +28,16 @@ public class SensorSimulatorWorker extends Thread {
         new Timer().scheduleAtFixedRate(new TimerTask(){
             @Override
             public void run(){
-                if(standartDeviationMultiplier ==5){
+                if(standartDeviationMultiplier ==10){
                     standartDeviationMultiplier = 70;
-                    dataGenerationDelay = 20;
+                    dataGenerationDelay = 33;
                 }else{
-                    standartDeviationMultiplier = 5;
-                    dataGenerationDelay = 20;
+                    standartDeviationMultiplier = 10;
+                    dataGenerationDelay = 33;
                 }
 
             }
-        },1*30*1000,1*30*1000);// TODO: MOVE
+        },0,1*15*1000);// TODO: MOVE
     }
 
     public void run(){
