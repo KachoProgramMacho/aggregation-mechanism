@@ -32,7 +32,7 @@ public class MonitoringService{
 
     public void startMonitoring(){
 
-        new Timer().scheduleAtFixedRate(new TimerTask(){
+/*        new Timer().scheduleAtFixedRate(new TimerTask(){
             @Override
             public void run(){
                 double forecastValue = dataCollector.forecastNextVarianceMovingAverage(movingAverageWindowSize);
@@ -45,21 +45,21 @@ public class MonitoringService{
                 System.out.println("Mem: " +getMemoryUtilization());
                 System.out.println("CPU: "+getCPUUtilization());
             }
-        },1000*60*1,123123);
-/*        new Timer().scheduleAtFixedRate(new TimerTask(){
+        },1000*60*1,123123);*/
+        new Timer().scheduleAtFixedRate(new TimerTask(){
             @Override
             public void run(){
                 double forecastValue = dataCollector.forecastNextVarianceMovingAverage(movingAverageWindowSize);
                 if((forecastValue > varianceThreshold && !overVarianceThreshold)||(forecastValue < varianceThreshold && overVarianceThreshold)){
+                    System.out.println("Forecast Variance Value: " + forecastValue);
+                    System.out.println("Mem: " +getMemoryUtilization());
+                    System.out.println("CPU: "+getCPUUtilization());
                     dataCollector.createChart(getMemoryUtilization(),getCPUUtilization());
                     dataCollector.deleteCollectedData();
                     overVarianceThreshold = !overVarianceThreshold;
                 }
-                System.out.println("Forecast Variance Value: " + forecastValue);
-                System.out.println("Mem: " +getMemoryUtilization());
-                System.out.println("CPU: "+getCPUUtilization());
             }
-        },monitoringIntervalInMilli,monitoringIntervalInMilli);*/
+        },monitoringIntervalInMilli,monitoringIntervalInMilli);
 
 
     }

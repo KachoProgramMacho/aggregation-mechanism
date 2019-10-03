@@ -3,7 +3,9 @@ import org.knowm.xchart.*;
 
 import javax.swing.*;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.Array;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -54,7 +56,7 @@ public class DataCollector {
         return variance;
     }*/
 
-    public double forecastNextVarianceMovingAverage(int n){
+    public synchronized double forecastNextVarianceMovingAverage(int n){
         if(varianceData.size()<n)
             return 0;
         List<Double> subList = varianceData.subList(varianceData.size()-n,varianceData.size());
@@ -93,7 +95,7 @@ public class DataCollector {
 
 
         long timeWindowOfData = collectedData.get(collectedDataSize-1).getKey().getTime() - collectedData.get(0).getKey().getTime();
-        double averageDataDelay = timeWindowOfData / collectedDataSize;
+        double averageDataDelay = (double)timeWindowOfData / (double) collectedDataSize;
         double frequency= 1000/averageDataDelay;
 
         System.out.println("FREQUENCY : "+frequency + " datapoints per second");
@@ -104,23 +106,29 @@ public class DataCollector {
 
 
         if(logisticRegressionOutput<0.5) {
-            double[] xData = new double[varianceData.size()];
+/*            double[] xData = new double[varianceData.size()];
             double[] yData = new double[varianceData.size()];
             for (int i = 0; i < varianceData.size(); i++) {
                 xData[i] = i;
                 yData[i] = varianceData.get(i);
-            }
+            }*/
 
-/*
             double[] xData = new double[collectedDataSize];
             double[] yData = new double[collectedDataSize];
             for (int i = 0; i < collectedDataSize; i++) {
                 xData[i] = collectedData.get(i).getKey().getTime() - collectedData.get(0).getKey().getTime();
                 yData[i] = collectedData.get(i).getValue();
             }
-*/
-
-            XYChart chart = QuickChart.getChart("Variance statistics chart", "Index of variance value", "value", "Variance statistics chart", xData, yData);
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+            String dateStartString = format.format(collectedData.get(0).getKey());
+            String dateEndString = format.format(collectedData.get(collectedDataSize-1).getKey());
+            String chartNameTimeSeries = dateStartString +"---"+ dateEndString + "--TIMESERIES";
+            XYChart chart = QuickChart.getChart("Time series chart: "+dateStartString+"---"+dateEndString, "Time in milliseconds", "value", "Time series chart", xData, yData);
+            try {
+                BitmapEncoder.saveBitmapWithDPI(chart, "src\\main\\resources\\generated-charts\\"+chartNameTimeSeries, BitmapEncoder.BitmapFormat.PNG, 300);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             JFrame jFrame1 = new SwingWrapper(chart).displayChart();
             jFrame1.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         }else {
@@ -150,8 +158,11 @@ public class DataCollector {
                 numberOfDatapoints.set(numberOfDatapoints.size() - 1, numberOfDatapoints.get(numberOfDatapoints.size() - 1) + 1);
 
             }
-
-            CategoryChart histogramChart = new CategoryChartBuilder().width(800).height(600).title("Score Histogram").xAxisTitle("Score").yAxisTitle("Number").build();
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+            String dateStartString = format.format(collectedData.get(0).getKey());
+            String dateEndString = format.format(collectedData.get(collectedDataSize-1).getKey());
+            String chartNameHistogram = dateStartString +"---"+ dateEndString + "--HISTOGRAM";
+            CategoryChart histogramChart = new CategoryChartBuilder().width(800).height(600).title("Histogram: "+dateStartString+"---"+dateEndString).xAxisTitle("Time period").yAxisTitle("Number").build();
             histogramChart.getStyler().setDatePattern("HH:mm:ss");
             // Customize Chart
 /*
@@ -161,6 +172,11 @@ public class DataCollector {
 
             // Series
             histogramChart.addSeries("test 1", buckets, numberOfDatapoints);
+            try {
+                BitmapEncoder.saveBitmapWithDPI(histogramChart, "src\\main\\resources\\generated-charts\\"+chartNameHistogram, BitmapEncoder.BitmapFormat.PNG, 300);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             JFrame jFrame2 = new SwingWrapper(histogramChart).displayChart();
             jFrame2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         }
