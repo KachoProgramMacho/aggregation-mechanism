@@ -1,7 +1,5 @@
 import javafx.util.Pair;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Date;
@@ -9,68 +7,85 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * Opens socket connection to DeciderServer, starts generation data points and sends them to DeviderServer.
+ * Has two distinct states: low and high variance
+ */
 public class SensorSimulatorWorker extends Thread {
 
-    Socket socket;
-    ObjectOutputStream dataOutputStream;
-    boolean continueRunning = true;
-    int id;
-    double standartDeviationMultiplier = 1;
-    double multiplierIncrease;
-    int dataGenerationInterval;
-    int dataGenerationDelay = 100;
+    private Socket socket;
+    private ObjectOutputStream dataOutputStream;
+    private boolean continueRunning = true;
 
-    public SensorSimulatorWorker(int id, double multiplierIncrease, int dataGenerationInterval){
+
+    private int id;
+    int nextPause;
+    private double standartDeviationMultiplier;
+    private int dataGenerationDelay;
+
+    private String host;
+    private int port;
+    private double lowVarianceState;
+    private double highVarianceState;
+    private int dataGenerationDelayLowVariance;
+    private int dataGenerationDelayHighVariance;
+    private int stateShiftInterval;
+
+
+    public SensorSimulatorWorker(int id, String host, int port, double lowVarianceState, double highVarianceState,
+                                 int dataGenerationDelayLowVariance, int dataGenerationDelayHighVariance, int stateShiftInterval){
         this.id = id;
-        this.multiplierIncrease = multiplierIncrease;
-        this.dataGenerationInterval = dataGenerationInterval;
+        this.host = host;
+        this.port = port;
+        this.lowVarianceState = lowVarianceState;
+        this.highVarianceState = highVarianceState;
+        this.dataGenerationDelayLowVariance = dataGenerationDelayLowVariance;
+        this.dataGenerationDelayHighVariance = dataGenerationDelayHighVariance;
+        this.dataGenerationDelay = dataGenerationDelayLowVariance;
+        this.standartDeviationMultiplier = this.lowVarianceState;
+        this.stateShiftInterval = stateShiftInterval;
+        this.nextPause = dataGenerationDelayLowVariance;
+
         System.out.println("Worker "+id+" spawned!");
+
+        //Shift variance state
         new Timer().scheduleAtFixedRate(new TimerTask(){
             @Override
             public void run(){
-                if(standartDeviationMultiplier ==10){
-                    standartDeviationMultiplier = 70;
+                if(standartDeviationMultiplier ==lowVarianceState){
+                    standartDeviationMultiplier = highVarianceState;
                     dataGenerationDelay = 50;
                 }else{
-                    standartDeviationMultiplier = 10;
+                    standartDeviationMultiplier = lowVarianceState;
                     dataGenerationDelay = 5;
                 }
 
             }
-        },0,1*30*1000);// TODO: MOVE
+        },stateShiftInterval,stateShiftInterval);
     }
 
     public void run(){
         try {
-            socket = new Socket("localhost",7000); //TODO: MOVE
+            socket = new Socket(this.host,this.port);
             dataOutputStream = new ObjectOutputStream(socket.getOutputStream());
             while(continueRunning){
-                Thread.sleep(dataGenerationInterval);
-                dataGenerationInterval = new Random().nextInt(dataGenerationDelay);
-                if(new Random().nextInt(3000)==45){
-                    Thread.sleep(2000);
-                }
-                //System.out.println("Worker"+this.id+" sent data.");
-
-                //dataOutputStream.flush();
-
-                //System.out.println("dai muu");
+                Thread.sleep(this.nextPause);
+                this.nextPause = new Random().nextInt(dataGenerationDelay);
                 dataOutputStream.writeObject(this.generateDataPointPair());
             }
 
             socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (Exception e){
             e.printStackTrace();
         }
     }
 
+    /**
+     * generates random values from a normal distribution
+     */
     public Pair<Date,Double> generateDataPointPair(){
         Random rand = new Random();
         Double value = rand.nextGaussian()*standartDeviationMultiplier;
-        //standartDeviationMultiplier += multiplierIncrease;
-        //System.out.println(standartDeviationMultiplier);
         Pair<Date,Double> newDataPoint = new Pair<Date,Double>(new Date(),value);
         return newDataPoint;
     }

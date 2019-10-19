@@ -17,7 +17,7 @@ public class DiagramGenerationRuntimeTest {
     public static void main(String... args){
 
 
-        DataCollector dataCollector = new DataCollector(10);
+        DataCollector dataCollector = new DataCollector(10,150);
         int counter = 0;
         int[] numberOfEntries = new int[100];
         int[] histogramGenTime = new int[100];

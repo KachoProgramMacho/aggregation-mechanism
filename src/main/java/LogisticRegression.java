@@ -14,6 +14,7 @@ import java.util.Scanner;
  * 
  * @author tpeng
  * @author Matthieu Labas
+ * github link: https://github.com/tpeng/logistic-regression
  */
 public class LogisticRegression {
 
@@ -47,10 +48,7 @@ public class LogisticRegression {
 				}
 				// not necessary for learning
 				lik += label * Math.log(classify(x)) + (1-label) * Math.log(1- classify(x));
-			}
-			/*System.out.println("iteration: " + n + " " + ((double)Math.round(weights[0]*100 * 100000d) / 100000d) +"  " +
-					(double)Math.round(weights[1]*100 * 100000d) / 100000d+ "  "+(double)Math.round(weights[2]*100 * 100000d) / 100000d);
-		*/}
+			}}
 	}
 
 	double classify(int[] x) {

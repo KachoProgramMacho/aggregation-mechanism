@@ -16,7 +16,7 @@ public class DiagramGenerationRuntimeFIXEDNUMBERANDBUCKETTest {
     public static void main(String... args) throws InterruptedException {
 
 
-        DataCollector dataCollector = new DataCollector(10);
+        DataCollector dataCollector = new DataCollector(10,150);
         int counter = 0;
         int[] numberOfEntries = new int[100];
         int[] histogramBucketGenTime = new int[100];

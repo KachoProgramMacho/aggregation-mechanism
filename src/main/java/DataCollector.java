@@ -2,8 +2,7 @@ import javafx.util.Pair;
 import org.knowm.xchart.*;
 
 import javax.swing.*;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -11,6 +10,10 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+    This component is responsible for data collection and gathering of statistical information used by the Data segmentation
+    mechanism and the data classification mechanism.
+ */
 public class DataCollector {
     ArrayList<Pair<Date,Double>> collectedData;
     ArrayList<Double> varianceData;
@@ -32,27 +35,6 @@ public class DataCollector {
         }
         logisticRegression.train(instances);
     }
-
-/*    public double calculateVariance(){
-        //calculate mean
-        double mean = 0;
-
-        //iterator avoid concurrency problems
-        Iterator<Pair<Date,Double>> iter = collectedData.iterator();
-        while (iter.hasNext()) {
-            mean += iter.next().getValue();
-        }
-        mean /= collectedData.size();
-
-        //calculate variance
-        double variance = 0;
-        for(Pair<Date,Double> dataPoint : collectedData){
-            variance += (dataPoint.getValue() - mean) * (dataPoint.getValue() - mean);
-        }
-        variance /= collectedData.size();
-
-        return variance;
-    }*/
 
     public synchronized double forecastNextVarianceMovingAverage(int n){
         if(varianceData.size()<n)
@@ -85,7 +67,6 @@ public class DataCollector {
         }
         variance /= subList.size();
         this.varianceData.add(variance);
-        //System.out.println("new variance " + variance);
     }
 
     public void createChart(int memoryUtilization, int CPUUtilization){
@@ -101,16 +82,13 @@ public class DataCollector {
         double logisticRegressionOutput = logisticRegression.classify(new int[]{(int)frequency,CPUUtilization,memoryUtilization});
         System.out.println("Logistic Regression: "+logisticRegressionOutput);
 
+        boolean aggregate = logisticRegressionOutput>0.5;
 
+        writeNewTrainingSetEntry((int)frequency,memoryUtilization,CPUUtilization,aggregate?1:0);
 
-        if(logisticRegressionOutput<0.5) {
-/*            double[] xData = new double[varianceData.size()];
-            double[] yData = new double[varianceData.size()];
-            for (int i = 0; i < varianceData.size(); i++) {
-                xData[i] = i;
-                yData[i] = varianceData.get(i);
-            }*/
+        if(!aggregate) {
 
+            //Time Series chart
             double[] xData = new double[collectedDataSize];
             double[] yData = new double[collectedDataSize];
             for (int i = 0; i < collectedDataSize; i++) {
@@ -162,11 +140,6 @@ public class DataCollector {
             String chartNameHistogram = dateStartString +"---"+ dateEndString + "--HISTOGRAM";
             CategoryChart histogramChart = new CategoryChartBuilder().width(800).height(600).title("Histogram: "+dateStartString+"---"+dateEndString).xAxisTitle("Time period").yAxisTitle("Number").build();
             histogramChart.getStyler().setDatePattern("HH:mm:ss");
-            // Customize Chart
-/*
-        chart.getStyler().setLegendPosition(LegendPosition.InsideNW);
-        chart.getStyler().setHasAnnotations(true);
-*/
 
             // Series
             histogramChart.addSeries("test 1", buckets, numberOfDatapoints);
@@ -180,6 +153,17 @@ public class DataCollector {
         }
     }
 
+    public void writeNewTrainingSetEntry(int frequency, int memory, int cpu, int agg){
+        String newLine = "\n11  "+frequency+" "+memory+" "+cpu+" "+agg;
+        Writer output;
+        try {
+            output = new BufferedWriter(new FileWriter("src\\main\\resources\\dataset.txt", true));  //clears file every time
+            output.append(newLine);
+            output.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void deleteCollectedData() {
         this.collectedData.clear();

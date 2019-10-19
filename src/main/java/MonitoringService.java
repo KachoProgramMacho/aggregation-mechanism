@@ -1,53 +1,24 @@
-import javafx.util.Pair;
-import sun.plugin2.gluegen.runtime.CPU;
-
 import javax.management.*;
-import java.io.FileNotFoundException;
 import java.lang.management.ManagementFactory;
 import java.util.*;
 
 public class MonitoringService{
-
-    //TODO: IZVADI VARIABLITE
-
-    //TODO: WRITE LOG REG TO TEXT FILE
-    DataCollector dataCollector;
-    int monitoringIntervalInMilli;
-    int movingAverageWindowSize;
-    //int gatherVarianceDataPeriodinMilliseconds = 600;
-
-    final int reportTimeWindow = 1 * 60 * 1000;
-    boolean overVarianceThreshold = false;
-    double varianceThreshold = 1000.0;
-
-    //console colors
-    public static final String GREEN = "\033[0;32m";
-    public static final String RESET = "\033[0m";
+    private DataCollector dataCollector;
+    private int monitoringIntervalInMilli;
+    private int movingAverageWindowSize;
+    private boolean overVarianceThreshold = false;
+    private double varianceThreshold;
 
 
-
-    public MonitoringService(DataCollector dataCollector, int monitoringIntervalInMilli, int movingAverageWindowSize){
+    public MonitoringService(DataCollector dataCollector, int monitoringIntervalInMilli, int movingAverageWindowSize, double varianceThreshold){
         this.dataCollector = dataCollector;
         this.monitoringIntervalInMilli = monitoringIntervalInMilli;
         this.movingAverageWindowSize = movingAverageWindowSize;
+        this.varianceThreshold = varianceThreshold;
     }
 
     public void startMonitoring(){
 
-/*        new Timer().scheduleAtFixedRate(new TimerTask(){
-            @Override
-            public void run(){
-                double forecastValue = dataCollector.forecastNextVarianceMovingAverage(movingAverageWindowSize);
-                if(true||(forecastValue > varianceThreshold && !overVarianceThreshold)||(forecastValue < varianceThreshold && overVarianceThreshold)){
-                    dataCollector.createChart(getMemoryUtilization(),getCPUUtilization());
-                    dataCollector.deleteCollectedData();
-                    overVarianceThreshold = !overVarianceThreshold;
-                }
-                System.out.println("Forecast Variance Value: " + forecastValue);
-                System.out.println("Mem: " +getMemoryUtilization());
-                System.out.println("CPU: "+getCPUUtilization());
-            }
-        },1000*60*1,123123);*/
         new Timer().scheduleAtFixedRate(new TimerTask(){
             @Override
             public void run(){
@@ -69,7 +40,7 @@ public class MonitoringService{
         return (int)((double)(( Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())) / Runtime.getRuntime().totalMemory() * 100);
     }
 
-    //TODO: LOOK THROUGH ONCE MORE
+    //From stackoverflow on 19.10.2019: https://stackoverflow.com/questions/18489273/how-to-get-percentage-of-cpu-usage-of-os-from-java/21962037
     public int getCPUUtilization(){
         try {
 
