@@ -20,6 +20,7 @@ public class DeciderServer {
     final int monitoringIntervalInMilli = 1000;
     final int movingAverageWindowSize = 3;
 
+    int histogramBucketSize = 5000;
 
     public static void main(String[] args){
         new DeciderServer();

@@ -33,7 +33,7 @@ public class SensorSimulatorWorker extends Thread {
                     dataGenerationDelay = 50;
                 }else{
                     standartDeviationMultiplier = 10;
-                    dataGenerationDelay = 2;
+                    dataGenerationDelay = 5;
                 }
 
             }

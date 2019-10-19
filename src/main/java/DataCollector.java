@@ -15,15 +15,13 @@ public class DataCollector {
     ArrayList<Pair<Date,Double>> collectedData;
     ArrayList<Double> varianceData;
     int calculateVarianceWindowSize;
-    //in milliseconds
-    int histogramBucketSize = 5000;
-    int frequencyThreshold= 100;
-
+    int histogramBucketSize;
     LogisticRegression logisticRegression;
 
-    public DataCollector(int calculateVarianceWindowSize){
+    public DataCollector(int calculateVarianceWindowSize, int histogramBucketSize){
         this.collectedData = new ArrayList<Pair<Date,Double>>();
         this.varianceData = new ArrayList<Double>();
+        this.histogramBucketSize = histogramBucketSize;
         this.calculateVarianceWindowSize = calculateVarianceWindowSize;
         logisticRegression = new LogisticRegression(3);
         List<LogisticRegression.Instance> instances = null;

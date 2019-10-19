@@ -9,6 +9,8 @@ import java.util.*;
 public class MonitoringService{
 
     //TODO: IZVADI VARIABLITE
+
+    //TODO: WRITE LOG REG TO TEXT FILE
     DataCollector dataCollector;
     int monitoringIntervalInMilli;
     int movingAverageWindowSize;
